@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Next Move AI</title>
+
+  <!-- Custom Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --primary: #4a6bff;
+      --primary-dark: #3a56e8;
+      --background: #f8faff;
+      --card-bg: #ffffff;
+      --text: #333333;
+      --border: #e1e5f2;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(-45deg, #dbe8ff, #e8f0ff, #f5faff, #e8f0ff);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    .container {
+      max-width: 800px;
+      width: 90%;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+    }
+
+    .form-step {
+      display: none;
+      animation: fadeInUp 0.7s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .form-step.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    label {
+      display: block;
+      margin: 20px 0 10px;
+      font-weight: 500;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid var(--border);
+      border-radius: 15px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 8px rgba(74, 107, 255, 0.2);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+      animation: pulseGlow 1s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 10px rgba(74, 107, 255, 0.2); transform: translateY(-1px);}
+      to { box-shadow: 0 0 20px rgba(74, 107, 255, 0.4); transform: translateY(-3px);}
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .btn-prev {
+      background-color: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .radio-group {
+      margin: 10px 0 20px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+      cursor: pointer;
+    }
+
+    .radio-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .radio-custom {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      margin-right: 12px;
+      position: relative;
+    }
+
+    .radio-option:hover .radio-custom {
+      border-color: var(--primary);
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-custom {
+      border-color: var(--primary);
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-custom::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      background-color: var(--primary);
+      border-radius: 50%;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .loading-dots {
+      display: inline-block;
+    }
+
+    .loading-dots div {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin: 0 5px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      animation: bouncingDots 0.9s infinite ease-in-out;
+    }
+
+    .loading-dots div:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots div:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bouncingDots {
+      0%, 80%, 100% { transform: scale(0.8); }
+      40% { transform: scale(1.2); }
+    }
+
+    .result-container {
+      display: none;
+      margin-top: 30px;
+      padding: 20px;
+      background-color: rgba(74, 107, 255, 0.05);
+      border-radius: 15px;
+      border-left: 4px solid var(--primary);
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Next Move AI</h1>
+    <p>Your Personal Life Advisor Assistant</p>
+
+    <form id="advisor-form" onsubmit="submitForm(event)">
+      <div class="form-step active" id="step1">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required />
+
+        <div class="navigation">
+          <div></div>
+          <button type="button" onclick="nextStep(1)">Next</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step2">
+        <label for="age">Your Age:</label>
+        <input type="number" id="age" name="age" min="1" max="120" required />
+        <label for="gender">Your Gender:</label>
+        <select id="gender" name="gender" required>
+          <option value="">Select gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <div class="navigation">
+          <button type="button" class="btn-prev" onclick="prevStep(2)">Previous</button>
+          <button type="button" onclick="nextStep(2)">Next</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step3">
+        <label for="personal_life">Describe Your Personal Life Situation:</label>
+        <textarea id="personal_life" name="personal_life" rows="4" required></textarea>
+
+        <div class="navigation">
+          <button type="button" class="btn-prev" onclick="prevStep(3)">Previous</button>
+          <button type="button" onclick="nextStep(3)">Next</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step4">
+        <label for="professional_life">Describe Your Professional Life Situation:</label>
+        <textarea id="professional_life" name="professional_life" rows="4" required></textarea>
+
+        <div class="navigation">
+          <button type="button" class="btn-prev" onclick="prevStep(4)">Previous</button>
+          <button type="button" onclick="nextStep(4)">Next</button>
+        </div>
+      </div>
+
+      <div class="form-step" id="step5">
+        <label>Your Current Phase of Life:</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="life_phase" value="Able to handle situation but need advice" required />
+            <span class="radio-custom"></span>
+            <span>Able to handle but need advice</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="life_phase" value="Doubtful and confused" />
+            <span class="radio-custom"></span>
+            <span>Doubtful and confused</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="life_phase" value="No hope to solve the situation" />
+            <span class="radio-custom"></span>
+            <span>No hope to solve</span>
+          </label>
+        </div>
+
+        <label for="advisor">Choose Advisor Type:</label>
+        <select id="advisor" name="advisor" required>
+          <option value="">Select an advisor</option>
+          <option value="Friends">Friends</option>
+          <option value="Parents">Parents</option>
+          <option value="Professors and Teachers">Professors and Teachers</option>
+          <option value="Experienced Persons">Experienced Persons</option>
+        </select>
+
+        <div class="navigation">
+          <button type="button" class="btn-prev" onclick="prevStep(5)">Previous</button>
+          <button type="submit">Analyze My Situation</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="loading" id="loading">
+      <p>Analyzing your situation...</p>
+      <div class="loading-dots">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="result-container" id="result-container">
+      <h2>AI Analysis Result:</h2>
+      <div id="result-content"></div>
+    </div>
+  </div>
+  
+
+  <script>
+  let currentStep = 1;
+
+  function nextStep(step) {
+    document.getElementById(`step${step}`).classList.remove('active');
+    currentStep = step + 1;
+    document.getElementById(`step${currentStep}`).classList.add('active');
+  }
+
+  function prevStep(step) {
+    document.getElementById(`step${step}`).classList.remove('active');
+    currentStep = step - 1;
+    document.getElementById(`step${currentStep}`).classList.add('active');
+  }
+
+  function submitForm(event) {
+    event.preventDefault();
+
+    // Hide any previous result
+    document.getElementById('result-content').innerText = '';
+    document.getElementById('result-container').style.display = 'none';
+
+    // Get form data
+    const formData = new FormData(document.getElementById('advisor-form'));
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    // Show loading animation
+    document.getElementById('loading').style.display = 'block';
+
+    // Send to backend
+    fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('result-content').innerText = data.result;
+      document.getElementById('result-container').style.display = 'block';
+
+      // Smooth scroll to result
+      document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
+    })
+    .catch(err => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('result-content').innerText = 'Error getting advice.';
+      document.getElementById('result-container').style.display = 'block';
+      document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+  </script>
+
+</body>
+</html>
